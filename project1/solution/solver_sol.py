@@ -29,7 +29,7 @@ Author: Kuo-Chuan Pan, NTHU 2022.10.06
 For the course, computational physics
 
 """
-def solve_ivp(func, t_span, y0, method, t_eval, args):
+def solve_ivp(func, t_span, y0, method, t_eval, *args):
     """
     Solve Initial Value Problems. 
 

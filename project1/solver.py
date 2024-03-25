@@ -47,9 +47,28 @@ def solve_ivp(func, t_span, y0, method, t_eval, args):
           t_span and t_eval. Be careful. 
 
     """
+    time = t_span[0]
+    y= y0
+    sol = np.zeros((len(y0),len(t_eval))) 
+    if method=="Euler":
+        _update = _update_euler
+    elif method=="RK2":
+        _update = _update_rk2
+    elif method=="RK4":
+        _update = _update_rk4
+    else:
+        print("Error: mysolve doesn't supput the method",method)
+        quit()
 
-    sol  = np.zeros((len(y0),len(t_eval))) # define the shape of the solution
+    for n,t in enumerate(t_eval):
+        dt = t-time
+        if dt >0:
+            # Advance the solution
+            y = _update(func, y, dt ,t, *args)
 
+        # record the solution
+        sol[:,n] = y
+        time += dt
     #
     # TODO:
     #
@@ -89,6 +108,9 @@ def _update_euler(derive_func,y0,dt,t,*args):
     :return: the next step solution y
 
     """
+    yderv = func(t,y0,*args)
+    ynext = y0 + yderv * dt
+    return ynext
 
     #
     # TODO:
@@ -102,7 +124,11 @@ def _update_rk2(derive_func,y0,dt,t,*args):
 
     :return: the next step solution y
     """
-
+    yderv = func(t,y0,*args)
+    y1    = y0 + yderv * dt
+    yderv = func(t,y1,*args)
+    y2    = y1 + yderv * dt
+    return 0.5*(y0 + y2)
     #
     # TODO:
     #
@@ -115,7 +141,15 @@ def _update_rk4(derive_func,y0,dt,t,*args):
 
     :return: the next step solution y
     """
-
+    dt2 = 0.5*dt 
+    k1  = derive_func(t,y0,*args)
+    y1  = y0 + k1 * dt2
+    k2  = derive_func(t+dt2,y1,*args)
+    y2  = y0 + k2 * dt2
+    k3  = derive_func(t+dt2,y2,*args)
+    y3  = y0 + k3 * dt
+    k4  = derive_func(t+dt,y3,*args)
+    return y0 + dt*(k1+ 2*k2 + 2*k3 + k4)/6.0
     #
     # TODO:
     #
@@ -151,7 +185,14 @@ if __name__=='__main__':
         :param M: the mass of the oscillator
 
         """
+        
+        force = - K * y[0] # the force on the oscillator
+        A = force/M        # the accerlation
 
+        f = np.zeros(len(y)) # y' has the same dimension of y
+        f[0] = y[1]
+        f[1] = A
+        return f
         #
         # TODO:
         #
