@@ -8,5 +8,6 @@ class Particles:
     """
     def __init__(self, N):
         self.nparticles = N
+        # Test update in the main branch
         return
 
