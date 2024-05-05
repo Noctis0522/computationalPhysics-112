@@ -1,17 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from numba import jit, njit, prange
 
-"""
-
-The Particles class handle all particle properties
-
-    for the N-body simulation. 
-
-    
-Author: Kuo-Chuan Pan, NTHU 2022.10.30
-                            2024.03.31
-For the course, computational physics, NTHU
-"""
 
 class Particles:
     """
@@ -30,6 +20,8 @@ class Particles:
         self._accelerations = np.zeros((N,3))
         self._tags = np.arange(N)
         self._time = 0.0
+        self._EK = np.zeros((N,1))#新增動能和位能
+        self._potential=np.zeros((N,1))
         return
     
     @property
@@ -55,6 +47,7 @@ class Particles:
     @property
     def time(self):
         return self._time
+   
     
     @masses.setter
     def masses(self, m: np.ndarray):
@@ -100,6 +93,7 @@ class Particles:
         
         self._tags = tag
         return
+    
 
     def set_particles(self, pos, vel, acc):
         """
@@ -108,10 +102,13 @@ class Particles:
         :param pos: positions of particles
         :param vel: velocities of particles
         :param acc: accelerations of particles
+        :param pot: potential of particles
         """
         self.positions = pos
         self.velocities = vel
         self.accelerations = acc
+        
+    
         return
     
     def add_particles(self, mass, pos, vel, acc):
@@ -129,6 +126,25 @@ class Particles:
         self.accelerations = np.vstack((self.accelerations, acc))
         self.tags = np.arange(self.nparticles)
         return
+    def calculate_EK(self):
+        """
+        Calculate the kinetic energy of particles
+        """
+        self.EK = np.sum(self.velocities ** 2, axis=1)* self.masses[:, 0] / 2
+
+    def calculate_potential(self,G=0.1, rsoft=0.01):
+        """
+        Calculate the potential of the particles
+        """
+        self.potential = np.zeros((self.nparticles, 1)) 
+        for i in prange(self.nparticles):
+            for j in prange(i+1, self.nparticles):  # Avoid redundant calculations
+                rij = self.positions[i, :] -self.positions[j, :]
+                r = np.sqrt(np.sum(rij**2) + rsoft**2)
+                self.potential[i] += -G * self.masses[i, 0] * self.masses[j, 0] / r 
+                self.potential[j] += -G * self.masses[i, 0] * self.masses[j, 0] / r 
+
+    
 
     def output(self, filename):
         """
@@ -142,24 +158,17 @@ class Particles:
         acc = self.accelerations
         tags = self.tags
         time = self.time
+        self.calculate_EK()
+        self.calculate_potential()
 
-        header = """
-                ----------------------------------------------------
-                Data from a 3D direct N-body simulation. 
-
-                rows are i-particle; 
-                coumns are :mass, tag, x ,y, z, vx, vy, vz, ax, ay, az
-
-                NTHU, Computational Physics 
-
-                ----------------------------------------------------
-                """
-        header += "Time = {}".format(time)
+        header = "# time,tag,mass,x,y,z,vx,vy,vz,ax,ay,az,EK,U\n"
+        header += "# s,,kg,m,m,m,m/s,m/s,m/s,m/s^2,m/s^2,m/s^2,kg*m^2/s^2,kg*m^2/s^2\n"
+        header += "# {}\n".format(time)  # Add time value to the header
         np.savetxt(filename,(tags[:],masses[:,0],pos[:,0],pos[:,1],pos[:,2],
                             vel[:,0],vel[:,1],vel[:,2],
-                            acc[:,0],acc[:,1],acc[:,2]),header=header)
+                            acc[:,0],acc[:,1],acc[:,2],self.EK,self.potential[:,0]),header=header)
         return
-    
+
     def draw(self, dim=2):
         """
         Draw particles in 3D space

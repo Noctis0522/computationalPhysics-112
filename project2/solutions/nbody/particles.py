@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+from numba import jit, njit, prange
 """
 
 The Particles class handle all particle properties
@@ -30,6 +30,7 @@ class Particles:
         self._accelerations = np.zeros((N,3))
         self._tags = np.arange(N)
         self._time = 0.0
+        self._EK=np.ones((N,1))
         return
     
     @property
@@ -129,7 +130,12 @@ class Particles:
         self.accelerations = np.vstack((self.accelerations, acc))
         self.tags = np.arange(self.nparticles)
         return
-
+    def calculate_EK(self):
+     """
+     Calculate the kinetic energy of particles
+     """
+    self.EK = (self.velocities[:, 0] ** 2 + self.velocities[:, 1] ** 2 + self.velocities[:, 2] ** 2) \
+               * self.masses / 2
     def output(self, filename):
         """
         Output particle properties to a file
@@ -142,7 +148,7 @@ class Particles:
         acc = self.accelerations
         tags = self.tags
         time = self.time
-
+     
         header = """
                 ----------------------------------------------------
                 Data from a 3D direct N-body simulation. 

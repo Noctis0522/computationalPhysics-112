@@ -108,7 +108,7 @@ class NBodySimulator:
 
         print("Simulation is done!")
         return
-
+    @jit
     def _calculate_acceleration(self, nparticles, masses, positions):
         """
         Calculate the acceleration of the particles
@@ -121,7 +121,7 @@ class NBodySimulator:
         accelerations = _calculate_acceleration_kernel(nparticles, masses, positions, accelerations, G, rsoft)
 
         return accelerations
-        
+    @jit    
     def _advance_particles_Euler(self, dt, particles):
 
         nparticles = particles.nparticles
@@ -138,7 +138,7 @@ class NBodySimulator:
         particles.set_particles(positions, velocities, accelerations)
 
         return particles
-
+    @jit
     def _advance_particles_RK2(self, dt, particles):
 
         nparticles = particles.nparticles
