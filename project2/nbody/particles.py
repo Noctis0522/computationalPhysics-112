@@ -161,12 +161,12 @@ class Particles:
         self.calculate_EK()
         self.calculate_potential()
 
-        header = "# time,tag,mass,x,y,z,vx,vy,vz,ax,ay,az,EK,U\n"
-        header += "# s,,kg,m,m,m,m/s,m/s,m/s,m/s^2,m/s^2,m/s^2,kg*m^2/s^2,kg*m^2/s^2\n"
+        header = "# time,tag,mass,x,y,z,vx,vy,vz,ax,ay,az\n"
+        header += "# s,,kg,m,m,m,m/s,m/s,m/s,m/s^2,m/s^2,m/s^2\n"
         header += "# {}\n".format(time)  # Add time value to the header
         np.savetxt(filename,(tags[:],masses[:,0],pos[:,0],pos[:,1],pos[:,2],
                             vel[:,0],vel[:,1],vel[:,2],
-                            acc[:,0],acc[:,1],acc[:,2],self.EK,self.potential[:,0]),header=header)
+                            acc[:,0],acc[:,1],acc[:,2]),header=header)
         return
 
     def draw(self, dim=2):
